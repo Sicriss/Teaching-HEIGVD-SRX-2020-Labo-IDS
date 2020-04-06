@@ -1,5 +1,9 @@
 # Teaching-HEIGVD-SRX-2020-Laboratoire-IDS
 
+_par Thoeny Laurent (@Sicriss) & Wojciechowski Cassandre (@CassandreWoj)_
+
+
+
 **Ce travail de laboratoire est à faire en équipes de 2 personnes** (oui... en remote...). Je vous laisse vous débrouiller ;-)
 
 **ATTENTION : Commencez par créer un Fork de ce repo et travaillez sur votre fork.**
@@ -276,7 +280,7 @@ tcpdump -r /var/log/snort/snort.log.xxxxxxxxxx
 
 Vous pouvez aussi utiliser des captures Wireshark ou des fichiers snort.log.xxxxxxxxx comme source d'analyse por Snort.
 
-## Exercises
+## Exercices
 
 **Réaliser des captures d'écran des exercices suivants et les ajouter à vos réponses.**
 
@@ -286,7 +290,9 @@ Vous pouvez aussi utiliser des captures Wireshark ou des fichiers snort.log.xxxx
 
 ---
 
-**Reponse :**  
+**Reponse :**  Il s'agit de modules qui sont exécutés avant l'appel du moteur de règles et qui permettent d'effectuer des opérations sur les paquets avant leur traitement par ce dernier. Cela permet par exemple à certains paquets d'être convertis en texte clair afin de permettre d'y appliquer les règles. [Source](http://manual-snort-org.s3-website-us-east-1.amazonaws.com/node17.html).
+
+_(On imagine qu'aucune capture d'écran n'est nécessaire pour cette question)_.
 
 ---
 
@@ -294,7 +300,7 @@ Vous pouvez aussi utiliser des captures Wireshark ou des fichiers snort.log.xxxx
 
 ---
 
-**Reponse :**  
+**Reponse :**  Nous n'avons pas rencontré cette erreur lors du lancement de nos règles personnalisées. Cependant, il semble que ce message indique simplement que le fichier de configuration ne spécifie pas de pré-processeur pour le traitement du flux réseau.
 
 ---
 
@@ -310,7 +316,7 @@ alert tcp any any -> any any (msg:"Mon nom!"; content:"Rubinstein"; sid:4000015;
 
 ---
 
-**Reponse :**  
+**Reponse :**  Cette règle cherche dans tous les paquets tcp le nom "Rubinstein" dans le contenu et affiche dans son alerte le message spécifié "Mon nom!".
 
 ---
 
@@ -324,7 +330,13 @@ sudo snort -c myrules.rules -i eth0
 
 ---
 
-**Reponse :**  
+**Reponse :**  Au lancement, Snort fait un résumé de la configuration avec laquelle il est lancé, nous indiquant par exemple qu'une règle en TCP ANY est configurée. Ce que nous voyons est simplement l'initialisation du logiciel mais on ne reçoit pas d'alertes car aucun ne répond aux critères.
+
+![](images/1.png)
+
+![](images/2.png)
+
+---
 
 ---
 
@@ -334,7 +346,15 @@ Aller à un site web contenant dans son text votre nom ou votre mot clé que vou
 
 ---
 
-**Reponse :**  
+**Reponse :**  On ne constate rien dans le terminal directement, par contre on constate deux choses. Premièrement lors de l'arrêt de Snort on constate qu'il a bien envoyé des alertes. 
+
+![](images/4.png)
+
+Ensuite en allant dans `/var/log/snort/` nous pouvons constater que des alertes sont apparues. Ci-dessous un aperçu d'un `cat alert`.
+
+![](images/5.png)
+
+_(Ici nous avons créé la règle avec le nom "cern" et visité "info.cern.ch" qui est un ancien site HTTP. Nous avons fait cela pour ne pas perdre 2 jours à trouver un site http contenant le nom "Wojciechowski")._
 
 ---
 
@@ -344,7 +364,11 @@ Arrêter Snort avec `CTRL-C`.
 
 ---
 
-**Reponse :**  
+**Reponse :**  Snort nous donne des informations sur le type de paquets traités ainsi que sur les actions qu'il a entreprit (par.ex. le nombre d'alertes dans notre cas.)
+
+![](images/6.png)
+
+![](images/7.png)
 
 ---
 
@@ -355,7 +379,13 @@ Aller au répertoire /var/log/snort. Ouvrir le fichier `alert`. Vérifier qu'il 
 
 ---
 
-**Reponse :**  
+**Reponse :**  Nous constatons dans l'alerte, tout d'abord le SID ainsi que le numéro de révision, le message que nous avons choisi de lui donner ainsi qu'en dessous la priorité.
+
+Ensuite nous constatons le timestamp de l'alerte, ainsi les adresses IP d'origine et de destination.
+
+Puis en dessous, des informations plus techniques sur le paquet réseau (principalement header) qui ne sont ici pas pertinentes pour la compréhension.
+
+![](images/8.png)
 
 ---
 
@@ -370,7 +400,17 @@ Ecrire une règle qui journalise (sans alerter) un message à chaque fois que Wi
 
 ---
 
-**Reponse :**  
+**Reponse :**  Notre règle est la suivante :
+
+`log tcp 192.168.43.107 any -> 91.198.174.192 any (sid 4000025; rev:1;)`
+
+Nous imaginons que de détecter "Wikipedia.org" dans le contenu engendrerait un grand nombre de faux positif étant donné le nombre de fois où le site est référencé, mais la solution d'utiliser l'adresse IP n'est pas idéale.
+
+Les messages sont journalisés dans le fichier log de la capture qui est généré dans `/var/log/snort/` à nouveau. Ci-dessous se trouve une capture du tcpdump de ce log. On constate que de nombreuses requêtes sont journalisées puisque l'accès à la page ne consiste pas en un seul paquet.
+
+_(ici on utilise any comme port mais on pourrait utiliser 443, 80, ou les deux, afin de détecter spécifiquement de l'HTTP/HTTPS)_.
+
+![](images/9.png)
 
 ---
 
@@ -384,16 +424,19 @@ Ecrire une règle qui alerte à chaque fois que votre système reçoit un ping d
 
 ---
 
-**Reponse :**  
+**Reponse :**  Notre règle est ci-dessous
+
+`alert icmp any any -> 192.168.43.107 any (msg:"has been pinged"; itype:8; sid:4000027; rev:1;)`
 
 ---
-
 
 **Question 10: Comment avez-vous fait pour que ça identifie seulement les pings entrants ?**
 
 ---
 
-**Reponse :**  
+**Reponse :**  Le fait d'utiliser le symbole `->` permet que la règle soit à sens unique. Ci-dessous on verra comment rendre la règle bi-directionnelle.
+
+Nous avons dû ajouter `itype:8` afin de vérifier qu'on ne détecte pas les réponses à des ping sortants dans cette règle. Une alternative aurait probablement été de détecter "ICMP Request" dans le content.
 
 ---
 
@@ -402,16 +445,17 @@ Ecrire une règle qui alerte à chaque fois que votre système reçoit un ping d
 
 ---
 
-**Reponse :**  
+**Reponse :**  Le message a été journalisé dans le fichier de log correspondant à la capture, en plus d'apparaître dans les alertes.
 
 ---
-
 
 **Question 12: Qu'est-ce qui a été journalisé ?**
 
 ---
 
-**Reponse :**  
+**Reponse :**  Ci-dessous un extrait du log correspondant (le ping a été manuellement arrêté après 3).
+
+![](images/10.png)
 
 ---
 
@@ -425,22 +469,25 @@ Modifier votre règle pour que les pings soient détectés dans les deux sens.
 
 ---
 
-**Reponse :**  
+**Reponse :**  Simplement nous avons converti notre flèche en `<>` afin que la règle soit bi-directionnelle.
 
 ---
 
+![](images/11.png)
 
 --
 
 ### Detecter une tentative de login SSH
 
-Essayer d'écrire une règle qui Alerte qu'une tentative de session SSH a été faite depuis la machine d'un voisin (je sais que la situation actuelle du Covid-19 ne vous permet pas de vous mettre ensemble... utilisez votre imagination pour trouver la solution à cette question !). Si vous avez besoin de plus d'information sur ce qui décrit cette tentative (adresses, ports, protocoles), servez-vous de Wireshark pour analyser les échanges lors de la requête de connexion depuis votre voisi.
+Essayer d'écrire une règle qui Alerte qu'une tentative de session SSH a été faite depuis la machine d'un voisin (je sais que la situation actuelle du Covid-19 ne vous permet pas de vous mettre ensemble... utilisez votre imagination pour trouver la solution à cette question !). Si vous avez besoin de plus d'information sur ce qui décrit cette tentative (adresses, ports, protocoles), servez-vous de Wireshark pour analyser les échanges lors de la requête de connexion depuis votre voisin.
 
 **Question 14: Quelle est votre règle ? Montrer la règle et expliquer en détail comment elle fonctionne.**
 
 ---
 
-**Reponse :**  
+**Reponse :**  `alert tcp any any -> any 22 (content:"SSH-"; sid:4000029; rev:1;)`
+
+La règle détecte tout d'abord les paquets tcp en destination du port 22, puis vérifie dans le contenu qu'il y ait "SSH-" (pour détecter par exemple SSH-2.0). Cela nous permet d'éviter les faux-positifs par exemple si un scan venait à contacter le port 22.
 
 ---
 
@@ -450,6 +497,8 @@ Essayer d'écrire une règle qui Alerte qu'une tentative de session SSH a été 
 ---
 
 **Reponse :**  
+
+![](images/12.png)
 
 ---
 
@@ -463,7 +512,7 @@ Lancer Wireshark et faire une capture du trafic sur l'interface connectée au br
 
 ---
 
-**Reponse :**  
+**Reponse :**  On peut utiliser snort `-r` fichier.pcap afin de lire depuis une capture Wireshark. Bien entendu il faut également préciser `-c configfile` si on veut y appliquer nos règles personnelles.
 
 ---
 
@@ -473,7 +522,11 @@ Utiliser l'option correcte de Snort pour analyser le fichier de capture Wireshar
 
 ---
 
-**Reponse :**  
+**Reponse :**  Les alertes sont affichées lors de l'exécution mais rien n'est enregistré. Une autre différence est que le résumé final (nombre d'alertes et de log générés lorsque Snort s'arrête) n'est pas disponible.
+
+![](images/13.png)
+
+![](images/14.png)
 
 ---
 
@@ -481,7 +534,7 @@ Utiliser l'option correcte de Snort pour analyser le fichier de capture Wireshar
 
 ---
 
-**Reponse :**  
+**Reponse :**  Les nouvelles alertes ne sont pas ajoutée dans `/var/log/snort/alert` et aucun nouveau fichier de log n'est créé. 
 
 ---
 
@@ -495,16 +548,13 @@ Faire des recherches à propos des outils `fragroute` et `fragtest`.
 
 ---
 
-**Reponse :**  
-
----
-
+**Reponse :**  Ces outils servent à modifier le trafic réseau. Ici ils permettent d'échapper à la détéction de l'IDS. Fragtest fait partie de fragroute et sert tester si des paquets sont correctement transmis ou s'ils sont drop (par.ex. par un firewall).
 
 **Question 21: Quel est le principe de fonctionnement ?**
 
 ---
 
-**Reponse :**  
+**Reponse :**  Ces outils permettent la ré-écriture de trafic réseau à destination d'un hôte, permettant dans le cas présent de modifier les paquets transmis (par exemple les ré-organise).
 
 ---
 
@@ -513,31 +563,33 @@ Faire des recherches à propos des outils `fragroute` et `fragtest`.
 
 ---
 
-**Reponse :**  
+**Reponse :**  C'est l'un des modules pré-processeur de Snort (réponse à une question plus haut pour d'avantage de détails). Il fait principalement de la "défragmentation" dans le but d'améliorer le temps d'exécution du traitement des données, mais permet également (ce qui nous intéresse ici) des techniques "anti-evasion". [Source](https://www.snort.org/faq/readme-frag3)
 
 ---
 
 
 Reprendre l'exercice de la partie [Trouver votre nom](#trouver-votre-nom-). Essayer d'offusquer la détection avec `fragroute`.
 
-
 **Question 23: Quel est le résultat de votre tentative ?**
 
 ---
 
-**Reponse :**  
+**Reponse :**  Nous avons executé `fragroute 192.168.43.234` en laissant `/etc/fragroute.conf` à ses valeurs par défaut, malheureusement impossible de corriger l'erreur rencontrée, le détail de l'erreur rencontrée est disponible en fin de ce rapport.
+
+Selon notre compréhension de l'outil, nous ne serons pas detecté en utilisant la commande ainsi car fragroute va offusquer l'information.
 
 ---
 
 
 Modifier le fichier `myrules.rules` pour que snort utiliser le `Frag3 Preprocessor` et refaire la tentative.
 
-
 **Question 24: Quel est le résultat ?**
 
 ---
 
 **Reponse :**  
+
+Comme ci-dessus, nous sommes bloqués par l'erreur rencontrée. Cependant, nous imaginons que le preprocesseur "frag3" est une réponse directe suffisamment efficace à fragroute pour permettre la détéction.
 
 ---
 
@@ -546,16 +598,17 @@ Modifier le fichier `myrules.rules` pour que snort utiliser le `Frag3 Preprocess
 
 ---
 
-**Reponse :**  
+**Reponse :**  Le but de ce préprocesseur est de determiner si le trafic est chiffré et de permettre à ce dernier d'être (en tout cas partiellement) ignoré. Le trafic chiffré affecte les performances et va tendre à produire d'avantage de faux-positifs.
+
+Selon la documentation, par exemple du trafic HTTPS ne sera vérifié qu'au niveau du handshake.
 
 ---
-
 
 **Question 26: A quoi sert le `Sensitive Data Preprocessor` ?**
 
 ---
 
-**Reponse :**  
+**Reponse :**  Ce module Snort détecte les informations personnelles (Numéro de sécurité sociale, e-mail, numéro de carte bancaire, etc ..).
 
 ---
 
@@ -566,9 +619,26 @@ Modifier le fichier `myrules.rules` pour que snort utiliser le `Frag3 Preprocess
 
 ---
 
-**Reponse :**  
+**Reponse :**  Snort nous permet être un très bon outil pour le rôle de NIDS, en particulier les modules / pré-processeurs dont nous avons étudiés la documentation semblent très puissants, son utilisation dans ce laboratoire nous a également permis de raffraichir la théorie des vidéos sur le sujet.
+
+Il s'agit cependant d'un outil plus complexe à configurer, même pour des règles simples comme les notres nous avons dû appliquer des corrections pour améliorer la détéction (p.ex. question 14) et il est donc plus difficile à prendre en main.
 
 ---
+
+
+
+##### Annexe : Description de notre erreur fragroute
+
+Notre erreur rencontrée sur la machine Kali avec fragroute consistait à un message d'erreur `fragroute : no route to 192.168.43.107 : No such process`. L'adresse specifiée était l'adresse locale mais nous avons également testé la machine hôte et d'autres adresses, sans succès. L'erreur laisse penser à un problème réseau mais les autres communications (ping, ssh, etc..) fonctionnaient correctement entre les machines.
+
+![](images/fragroute0.png)
+
+Nous avons fait des recherches concernant cette erreur, sans succès, puis contacté l'assistant mais sans succès également (merci Yann pour ton temps !).
+
+Nous souhaitions essayer sur un autre environnement que celui de la machine Kali, ainsi nous avons voulu build snort et fragroute sur un linux natif (arch-based) mais avec une erreur lors du _make_ de fragroute, nous nous sommes retrouvés bloqués également.
+
+![](images/fragroute.png)
+
 
 
 <sub>This guide draws heavily on http://cs.mvnu.edu/twiki/bin/view/Main/CisLab82014</sub>
